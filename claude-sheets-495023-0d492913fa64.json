@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "claude-sheets-495023",
+  "private_key_id": "0d492913fa6483d754714300e410901ae52c0970",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDcyzNhhfAYMLwy\n3q5omXNjVOrFLDJWXxPr/04TB3fGxhUqpciB+Idu+YVAhYhHt3sp+aTzZVL4JLH7\nnTxJEiVF4PTRA6oSe+4UDR04TlUXmYRzDbadsZNEBxbY/lYiURXSpHwHCimaQZte\nhOMZlAbyyd8G30FM+C8fLUjUglUiO9X6ByZeYL9SD018V6m/uflNw712YnbystpE\nn+Y8U1ojtIfKsB2GJwZIar/gNCSurWraitbTvKstcAC+uK1xhBeoOTgaUYy1vxyT\nTU4la88qD/gTr+fGB8y2sG9O/OOg/P6neyc/72Z8jf1QvPC1FUGwP2YlxlGNfCMr\nnlGUnRBfAgMBAAECggEAXedqXeLaH1+y2yvMH56L7cYy51MJwaREU83MhdlaPscG\nP5IsueJar38eBjgEowPNNSgA2KfSZsksjWftOOKnyZWIadDWJ3Bf7FU7hTQDirr3\nEvvVHDJnALrHI9jgB05XKrRcL55J3Vpj2wpHkBxd7CqhWUngevzfBbJ71C3uSVVA\n70EQ3PAvAff2l4MA0yyPTSekb1fbCL+Zb/zW9pxJ1Xo/QT+6jbmBVWkglgSeHUbn\nnhFMuSlj52501A44YtwP4RC+CNa1nRq6UCRKI+GQnudBWMc5Lq/HuxfQZWQ+nuC7\nS0rPpvNyatvoRT5Y+1VEUmCte6gQxMWOL4BnkcWNUQKBgQD8bXUTMLhPqrrwVvIA\ni2hq0KRSP6pqDkvB5i4mnITox98U9x2hcwIBy0kcso0ha2qldeH9UX7pKr+fbO0w\n8IZ0XVrKPwm+UeUT6/ocoj7kP187IF5qXajkAzCSodzYZekfC2hbfmFX/pYvW7sD\nCOIY1xDeZaXjvBzVHCm5pSYBFwKBgQDf6yJmOYYfkDGrNck3z4rkIxGuurBG2/vf\nmm0E2l1U18vj0al3VNdFI63d21t1rzTNaVqGqQIO0n6ZAnxzFG9TgWHnkH5LNZYO\nLLl6kIFBIv4bLJHBGTD95BlSU/lw9RRGqOKFymYQWDLCPHnLH5na1ESezPF28uIz\n+c+xrZCn+QKBgQCnUiKlesjhPek2AFvfUoj/LJePUVYzgJBk0Z/LxjovVrUfX4IL\nj4FIESjAVfZIrbv+Ozp2QHvgMI7eLUS4COcG4Q6aOtjJh91RrDyYmE8Z2ovUVGth\nE/4sTZT3zUTnR/4TrusYopgBzOZeM+6tX0kHcB9lW3lvkDSIameZ/8dGNwKBgQCw\n5DNHqHfhZWsngxUT5vwlH+MvMsJhKBYBXiBzrgH/LX8f2ZjT8Y0iTH5k/o5xGNlQ\n0MK4ELnUdcuXGtSvoNwVjueGJKrwxUNmrURVo+TITVmKpBn8/uaqG9E5Laen6aR7\n8Z0J7ovUq6hls5rPsYY8zmXrQaIbwuKaBuZhyei2GQKBgQDwTAJoGC8jamJAt5Ea\n8/0UgqUXACquCiqH6xFuCRShkh/N09mkurWdHNpqSa588DC7nTY+IqHKgpouz6HC\n+OLvshOjnY96lEciODeP/uTEsc3t5XCtLwY+u2TyaBXj3U5ckx6zOtyQkgE2fo0w\nbNz6bbkGhBMqAGpvFGH0yqjA2w==\n-----END PRIVATE KEY-----\n",
+  "client_email": "claude@claude-sheets-495023.iam.gserviceaccount.com",
+  "client_id": "109266642035280874197",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/claude%40claude-sheets-495023.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
