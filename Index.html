@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Normas de Seguridad SI — ISO 27001:2022</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1e293b; font-size: 14px; -webkit-font-smoothing: antialiased; }
+
+/* OVERLAYS */
+.overlay-full { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f2744; z-index: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.overlay-title { color: #fff; font-size: 21px; font-weight: 700; letter-spacing: -.2px; }
+.overlay-title span { color: #60a5fa; }
+.overlay-sub  { color: rgba(255,255,255,.45); font-size: 13px; }
+.overlay-msg  { color: rgba(255,255,255,.65); font-size: 14px; text-align: center; max-width: 340px; line-height: 1.6; }
+.overlay-hint { color: rgba(255,255,255,.35); font-size: 12px; }
+.overlay-icon { opacity: .35; }
+
+/* TOPBAR */
+.topbar { background: #0f2744; color: #fff; padding: 0 24px; display: flex; align-items: center; height: 52px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 2px 12px rgba(0,0,0,.25); }
+.topbar-title { font-size: 15px; font-weight: 700; letter-spacing: -.2px; margin-right: 28px; white-space: nowrap; }
+.topbar-title span { color: #60a5fa; }
+.nav-btn { background: none; border: none; color: rgba(255,255,255,.55); padding: 0 14px; height: 52px; cursor: pointer; font-size: 13px; font-weight: 500; font-family: inherit; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; white-space: nowrap; }
+.nav-btn:hover { color: rgba(255,255,255,.85); }
+.nav-btn.active { color: #fff; border-bottom-color: #60a5fa; }
+.topbar-user { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(96,165,250,.25); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #93c5fd; flex-shrink: 0; }
+.topbar-user-info { display: flex; flex-direction: column; align-items: flex-end; }
+.topbar-user-name  { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.85); line-height: 1.2; }
+.topbar-user-badge { font-size: 10px; color: rgba(255,255,255,.4); }
+
+/* TABS */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ARBOL */
+#tab-arbol { height: calc(100vh - 52px); display: none; }
+#tab-arbol.active { display: flex; }
+
+.arbol-searchbar { background: #0f2744; padding: 10px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.arbol-searchbar input { flex: 1; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); border-radius: 7px; padding: 7px 11px; color: #fff; font-size: 12.5px; font-family: inherit; outline: none; transition: border-color .15s, background .15s; }
+.arbol-searchbar input::placeholder { color: rgba(255,255,255,.4); }
+.arbol-searchbar input:focus { border-color: #60a5fa; background: rgba(255,255,255,.15); }
+.arbol-searchbar .btn-clear { background: none; border: none; color: rgba(255,255,255,.4); cursor: pointer; font-size: 15px; padding: 0 4px; line-height: 1; transition: color .1s; }
+.arbol-searchbar .btn-clear:hover { color: #fff; }
+
+.panel-arbol { width: 320px; min-width: 220px; max-width: 420px; background: #162d4e; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid rgba(255,255,255,.06); resize: horizontal; }
+.panel-arbol-header { padding: 12px 14px 6px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: 1px; }
+.arbol-list { flex: 1; overflow-y: auto; padding: 4px 0 20px; }
+.arbol-list::-webkit-scrollbar { width: 4px; }
+.arbol-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 2px; }
+
+.nodo { user-select: none; }
+.nodo-row { display: flex; align-items: center; padding: 5px 10px 5px 0; cursor: pointer; border-radius: 6px; margin: 1px 6px; transition: background .1s; gap: 4px; }
+.nodo-row:hover { background: rgba(255,255,255,.07); }
+.nodo-row.selected { background: rgba(96,165,250,.2) !important; }
+.nodo-row.highlight { background: rgba(251,191,36,.12) !important; }
+.nodo-toggle { width: 18px; height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.3); font-size: 9px; transition: transform .15s; }
+.nodo-toggle.open { transform: rotate(90deg); }
+.nodo-toggle.leaf { opacity: 0; cursor: default; }
+.nodo-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; border: 1.5px solid rgba(255,255,255,.2); }
+.dot-con-evidencia { background: #22c55e; border-color: #16a34a; }
+.dot-sin-evidencia { background: transparent; border-color: rgba(255,255,255,.2); }
+.nodo-label { flex: 1; color: rgba(255,255,255,.8); font-size: 12px; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nodo-label.nivel1 { font-weight: 600; color: #fff; font-size: 12.5px; }
+.nodo-label.nivel2 { font-weight: 500; }
+.nodo-label.nivel3 { color: rgba(255,255,255,.6); font-size: 11.5px; }
+.nodo-label .nodo-id { color: #60a5fa; font-weight: 700; margin-right: 5px; }
+.nodo-label mark { background: rgba(251,191,36,.35); color: #fff; border-radius: 2px; padding: 0 1px; }
+.nodo-counter { font-size: 10px; color: rgba(255,255,255,.3); white-space: nowrap; flex-shrink: 0; padding-right: 4px; }
+.nodo-children { display: none; }
+.nodo-children.open { display: block; }
+.indent-1 { padding-left: 8px; }
+.indent-2 { padding-left: 24px; }
+.indent-3 { padding-left: 40px; }
+.arbol-sep { margin: 7px 12px; border: none; border-top: 1px solid rgba(255,255,255,.07); }
+
+/* PANEL DETALLE */
+.panel-detalle { flex: 1; overflow-y: auto; padding: 22px 26px; background: #f0f4f8; }
+.panel-detalle::-webkit-scrollbar { width: 5px; }
+.panel-detalle::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.detalle-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 14px; color: #94a3b8; }
+.detalle-placeholder svg { width: 44px; height: 44px; opacity: .3; }
+.detalle-placeholder div { font-size: 13px; }
+
+/* CARD CABECERA */
+.detalle-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04); padding: 22px 24px; margin-bottom: 12px; }
+.detalle-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+.detalle-badge { background: #0f2744; color: #60a5fa; font-size: 13px; font-weight: 700; padding: 6px 13px; border-radius: 8px; white-space: nowrap; font-family: 'SF Mono', 'Fira Code', monospace; flex-shrink: 0; letter-spacing: .5px; }
+.detalle-titulo { font-size: 17px; font-weight: 700; color: #0f2744; line-height: 1.35; letter-spacing: -.2px; }
+.detalle-tipo-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; margin-top: 5px; background: #ede9fe; color: #6d28d9; }
+.lectura-badge { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; margin-left: 6px; }
+.detalle-section { margin-bottom: 14px; }
+.detalle-section-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 8px; }
+.sub-chip { font-size: 11.5px; padding: 4px 11px; border-radius: 20px; font-weight: 500; background: #f5f3ff; color: #6d28d9; cursor: pointer; transition: background .15s; display: inline-block; margin: 2px 3px 2px 0; }
+.sub-chip:hover { background: #ede9fe; }
+
+/* CARDS SECCIÓN */
+.edit-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04); margin-bottom: 12px; overflow: hidden; }
+.edit-card-header { padding: 13px 22px; display: flex; align-items: center; gap: 9px; background: #fafbfc; border-bottom: 1px solid #f1f5f9; }
+.edit-card-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.edit-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: #64748b; }
+.edit-card-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 18px; }
+
+/* CAMPOS */
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-group label { font-size: 12px; font-weight: 600; color: #64748b; }
+
+.field-textarea {
+  width: 100%; min-height: 88px; resize: vertical;
+  border: 1.5px solid #e2e8f0; border-radius: 9px;
+  padding: 10px 13px; font-size: 13.5px; color: #1e293b;
+  background: #fff; outline: none; font-family: inherit; line-height: 1.65;
+  transition: border-color .18s, box-shadow .18s;
+}
+.field-textarea:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,.12); }
+.field-textarea.requisitos-ta { background: #faf8ff; border-left: 3px solid #7c3aed; border-radius: 0 9px 9px 0; }
+.field-textarea.requisitos-ta:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.field-textarea.solo-lectura { background: #f8fafc; color: #64748b; cursor: default; }
+.field-textarea.field-guardando { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.08); }
+.field-textarea.field-guardado  { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.1); }
+.field-textarea.field-error     { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.08); }
+
+/* CONTROLES TAB */
+.ctrl-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.ctrl-select, .ctrl-input { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 7px 12px; font-size: 13px; outline: none; background: #fff; font-family: inherit; transition: border-color .15s; color: #1e293b; }
+.ctrl-input { min-width: 240px; flex: 1; }
+.ctrl-select:focus, .ctrl-input:focus { border-color: #60a5fa; }
+select.est-conforme    { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+select.est-en-proceso  { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+select.est-no-conforme { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+select.est-no-aplica   { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+
+/* USUARIOS TAB */
+#tab-usuarios { padding: 24px; max-width: 960px; margin: 0 auto; }
+.card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04); padding: 20px 24px; margin-bottom: 16px; }
+.card h3 { font-size: 14px; font-weight: 700; color: #0f2744; margin-bottom: 16px; letter-spacing: -.1px; }
+.user-add-grid { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 12px; align-items: end; }
+.form-input { border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; outline: none; font-family: inherit; width: 100%; transition: border-color .15s; color: #1e293b; }
+.form-input:focus { border-color: #60a5fa; }
+.btn-add { background: #0f2744; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s; font-family: inherit; }
+.btn-add:hover { background: #1e3a5f; }
+.btn-add:disabled { opacity: .6; cursor: default; }
+.msg-form { display: none; margin-top: 12px; padding: 9px 13px; border-radius: 7px; font-size: 12.5px; }
+.msg-form.ok    { display: block; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.msg-form.error { display: block; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+/* DASHBOARD */
+#tab-dashboard { padding: 24px; max-width: 1100px; margin: 0 auto; }
+.dash-title    { font-size: 20px; font-weight: 700; color: #0f2744; margin-bottom: 4px; letter-spacing: -.3px; }
+.dash-subtitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: #94a3b8; margin: 20px 0 10px; }
+.cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 8px; }
+.stat-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04); padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; border-left: 3px solid #e2e8f0; }
+.stat-card.verde  { border-left-color: #22c55e; }
+.stat-card.ambar  { border-left-color: #f59e0b; }
+.stat-card.rojo   { border-left-color: #ef4444; }
+.stat-card.gris   { border-left-color: #94a3b8; }
+.stat-card.azul   { border-left-color: #3b82f6; }
+.stat-card.morado { border-left-color: #8b5cf6; }
+.stat-num   { font-size: 28px; font-weight: 700; line-height: 1; color: #0f2744; letter-spacing: -.5px; }
+.stat-label { font-size: 12px; color: #64748b; }
+.stat-pct   { font-size: 11px; color: #94a3b8; }
+.prog-row { margin-bottom: 13px; }
+.prog-label { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 5px; font-weight: 500; }
+.prog-bar { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; display: flex; }
+.prog-seg { height: 100%; transition: width .6s ease; }
+.seg-conf { background: #22c55e; } .seg-proc { background: #f59e0b; }
+.seg-noc  { background: #ef4444; } .seg-na   { background: #cbd5e1; }
+
+/* TOAST */
+#toast { position: fixed; bottom: 24px; right: 24px; padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; z-index: 300; transition: opacity .2s, transform .2s; transform: translateY(6px); background: #0f2744; color: #fff; font-family: inherit; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.error { background: #991b1b; }
+
+/* LOADING */
+.loading-arbol { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 180px; gap: 10px; color: rgba(255,255,255,.3); font-size: 12px; }
+.loading-spin { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.12); border-top-color: #60a5fa; border-radius: 50%; animation: spin .7s linear infinite; }
+.loading-spin-dark { width: 18px; height: 18px; border: 2px solid #e2e8f0; border-top-color: #0f2744; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#msg-ctrl { display: none; padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 12px; }
+
+@media (max-width: 900px) {
+  .panel-arbol { width: 260px; }
+  .user-add-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .panel-arbol { width: 200px; }
+  .panel-detalle { padding: 14px 16px; }
+  #tab-dashboard { padding: 14px; }
+  .user-add-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Overlay cargando -->
+<div id="overlay-loading" class="overlay-full">
+  <div class="overlay-title">Normas de <span>Seguridad SI</span></div>
+  <div class="loading-spin"></div>
+  <div class="overlay-sub">Verificando acceso...</div>
+</div>
+
+<!-- Overlay sin acceso -->
+<div id="overlay-sinacceso" class="overlay-full" style="display:none">
+  <svg class="overlay-icon" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.4">
+    <rect x="3" y="11" width="18" height="11" rx="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+  <div class="overlay-title" style="font-size:18px">Acceso denegado</div>
+  <div class="overlay-msg" id="sinacceso-msg">Tu cuenta no esta autorizada para acceder a este sistema.</div>
+  <div class="overlay-hint">Contacta al administrador para solicitar acceso.</div>
+</div>
+
+<!-- App -->
+<div class="topbar">
+  <div class="topbar-title">Normas de <span>Seguridad SI</span></div>
+  <button class="nav-btn active" id="nav-arbol"     onclick="showTab('arbol')">Clausulas ISO 27001</button>
+  <button class="nav-btn"        id="nav-controles" onclick="showTab('controles')">Anexo A — Controles</button>
+  <button class="nav-btn"        id="nav-dashboard" onclick="showTab('dashboard')">Dashboard</button>
+  <button class="nav-btn"        id="nav-usuarios"  onclick="showTab('usuarios')" style="display:none">Usuarios</button>
+  <div class="topbar-user">
+    <div class="topbar-user-info">
+      <div class="topbar-user-name"  id="topbar-nombre"></div>
+      <div class="topbar-user-badge" id="topbar-permiso"></div>
+    </div>
+    <div class="topbar-avatar" id="topbar-avatar"></div>
+  </div>
+</div>
+
+<!-- TAB: ARBOL -->
+<div id="tab-arbol" class="tab-content active">
+  <div class="panel-arbol">
+    <div class="arbol-searchbar">
+      <input type="text" id="arbol-buscar" placeholder="Buscar clausula..." oninput="buscarArbol()" autocomplete="off">
+      <button class="btn-clear" onclick="limpiarBusqueda()">x</button>
+    </div>
+    <div class="panel-arbol-header">ISO 27001:2022</div>
+    <div class="arbol-list" id="arbol-list">
+      <div class="loading-arbol"><div class="loading-spin"></div>Cargando...</div>
+    </div>
+  </div>
+  <div class="panel-detalle" id="panel-detalle">
+    <div class="detalle-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+        <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+      </svg>
+      <div>Selecciona una clausula del arbol</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: CONTROLES -->
+<div id="tab-controles" class="tab-content" style="padding:24px;max-width:1300px;margin:0 auto">
+  <div class="ctrl-filters">
+    <input type="text" class="ctrl-input" id="ctrl-buscar" placeholder="Buscar por ID, nombre o proposito..." oninput="filtrarControles()">
+    <select class="ctrl-select" id="ctrl-dominio" onchange="filtrarControles()">
+      <option value="">Todos los dominios</option>
+      <option value="5">5 — Organizacionales</option>
+      <option value="6">6 — Personas</option>
+      <option value="7">7 — Fisicos</option>
+      <option value="8">8 — Tecnologicos</option>
+    </select>
+    <select class="ctrl-select" id="ctrl-estado" onchange="filtrarControles()">
+      <option value="">Todos los estados</option>
+      <option value="Conforme">Conforme</option>
+      <option value="En proceso">En proceso</option>
+      <option value="No conforme">No conforme</option>
+      <option value="No aplica">No aplica</option>
+    </select>
+    <span id="ctrl-count" style="font-size:12px;color:#94a3b8;white-space:nowrap"></span>
+  </div>
+  <div id="msg-ctrl"></div>
+  <div class="card" style="padding:0">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left;white-space:nowrap">ID</th>
+          <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Dominio</th>
+          <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Control</th>
+          <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Estado</th>
+          <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Responsable</th>
+          <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Observaciones</th>
+        </tr></thead>
+        <tbody id="tbody-controles">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">Cargando controles...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: DASHBOARD -->
+<div id="tab-dashboard" class="tab-content">
+  <div class="dash-title">Dashboard ISO 27001:2022</div>
+  <div class="dash-subtitle">Clausulas — Cobertura documental</div>
+  <div class="cards-row">
+    <div class="stat-card azul">  <div class="stat-num" id="dk-clau-total">—</div><div class="stat-label">Total clausulas</div></div>
+    <div class="stat-card verde"> <div class="stat-num" id="dk-clau-evid">—</div> <div class="stat-label">Con evidencia</div><div class="stat-pct" id="dk-clau-evid-pct">—%</div></div>
+    <div class="stat-card ambar"> <div class="stat-num" id="dk-clau-hall">—</div> <div class="stat-label">Con hallazgos</div></div>
+    <div class="stat-card morado"><div class="stat-num" id="dk-clau-plan">—</div> <div class="stat-label">Con plan de accion</div></div>
+    <div class="stat-card gris">  <div class="stat-num" id="dk-clau-rec">—</div>  <div class="stat-label">Con recomendaciones</div></div>
+  </div>
+  <div class="dash-subtitle">Anexo A — 93 Controles</div>
+  <div class="cards-row">
+    <div class="stat-card azul"> <div class="stat-num" id="dk-ctrl-total">—</div><div class="stat-label">Total controles</div></div>
+    <div class="stat-card verde"><div class="stat-num" id="dk-ctrl-conf">—</div> <div class="stat-label">Conformes</div><div class="stat-pct" id="dk-ctrl-pct">—%</div></div>
+    <div class="stat-card ambar"><div class="stat-num" id="dk-ctrl-proc">—</div> <div class="stat-label">En proceso</div></div>
+    <div class="stat-card rojo"> <div class="stat-num" id="dk-ctrl-noc">—</div>  <div class="stat-label">No conformes</div></div>
+    <div class="stat-card gris"> <div class="stat-num" id="dk-ctrl-na">—</div>   <div class="stat-label">No aplica</div></div>
+  </div>
+  <div class="card" style="margin-top:8px">
+    <h3>Avance por dominio — Anexo A</h3>
+    <div id="prog-dominios"><div style="color:#94a3b8;font-size:13px">Cargando...</div></div>
+    <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:#64748b">
+      <span><span style="display:inline-block;width:9px;height:9px;background:#22c55e;border-radius:2px;margin-right:5px;vertical-align:middle"></span>Conforme</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:#f59e0b;border-radius:2px;margin-right:5px;vertical-align:middle"></span>En proceso</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:#ef4444;border-radius:2px;margin-right:5px;vertical-align:middle"></span>No conforme</span>
+      <span><span style="display:inline-block;width:9px;height:9px;background:#cbd5e1;border-radius:2px;margin-right:5px;vertical-align:middle"></span>No aplica</span>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: USUARIOS -->
+<div id="tab-usuarios" class="tab-content">
+  <div style="padding:24px;max-width:960px;margin:0 auto">
+    <div class="card">
+      <h3>Agregar usuario</h3>
+      <div class="user-add-grid">
+        <div class="form-group" style="margin:0">
+          <label>Email de Google</label>
+          <input type="email" id="nu-email" class="form-input" placeholder="usuario@empresa.com">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Nombre</label>
+          <input type="text" id="nu-nombre" class="form-input" placeholder="Nombre completo">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Permiso</label>
+          <select id="nu-permiso" class="ctrl-select" style="height:38px">
+            <option value="Lectura">Lectura</option>
+            <option value="Edicion">Edicion</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;justify-content:flex-end">
+          <label style="visibility:hidden">x</label>
+          <button class="btn-add" id="btn-agregar" onclick="agregarUsuarioFront()">+ Agregar</button>
+        </div>
+      </div>
+      <div id="msg-nu" class="msg-form"></div>
+    </div>
+    <div class="card" style="padding:0">
+      <div id="loading-usuarios" style="text-align:center;padding:32px;color:#94a3b8;display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px">
+        <div class="loading-spin-dark"></div> Cargando usuarios...
+      </div>
+      <div style="overflow-x:auto">
+        <table id="tabla-usuarios" style="width:100%;border-collapse:collapse;display:none">
+          <thead><tr>
+            <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Email</th>
+            <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Nombre</th>
+            <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Permiso</th>
+            <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Estado</th>
+            <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Agregado</th>
+            <th style="background:#f8fafc;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:11px 14px;border-bottom:1px solid #e2e8f0;text-align:left">Acciones</th>
+          </tr></thead>
+          <tbody id="tbody-usuarios"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var clausulas      = [];
+var controles      = [];
+var ctrlVisible    = [];
+var itemSeleccionado = null;
+var arbolBusqTerm  = '';
+var usuarioActual  = null;
+var SOLO_LECTURA   = false;
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', function() {
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var user = JSON.parse(json);
+      if (!user) {
+        document.getElementById('overlay-loading').style.display   = 'none';
+        document.getElementById('overlay-sinacceso').style.display = 'flex';
+        return;
+      }
+      usuarioActual = user;
+      SOLO_LECTURA  = (user.permiso === 'Lectura');
+
+      document.getElementById('topbar-nombre').textContent  = user.nombre;
+      document.getElementById('topbar-permiso').textContent = user.permiso;
+      document.getElementById('topbar-avatar').textContent  = (user.nombre || '?')[0].toUpperCase();
+
+      if (user.permiso === 'Admin') {
+        document.getElementById('nav-usuarios').style.display = 'inline-block';
+      }
+      document.getElementById('overlay-loading').style.display = 'none';
+      showTab('arbol');
+      cargarDatos();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('sinacceso-msg').textContent = 'Error al verificar acceso: ' + e.message;
+      document.getElementById('overlay-loading').style.display   = 'none';
+      document.getElementById('overlay-sinacceso').style.display = 'flex';
+    })
+    .getUsuarioActual();
+});
+
+// ── TABS ──
+function showTab(t) {
+  document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(el) { el.classList.remove('active'); });
+  var el = document.getElementById('tab-' + t);
+  if (el) el.classList.add('active');
+  var btn = document.getElementById('nav-' + t);
+  if (btn) btn.classList.add('active');
+  if (t === 'dashboard') cargarDashboard();
+  if (t === 'usuarios')  cargarUsuarios();
+}
+
+// ── DATOS ──
+function cargarDatos() {
+  google.script.run
+    .withSuccessHandler(function(json) { clausulas = JSON.parse(json); renderArbol(); })
+    .withFailureHandler(function(e) {
+      document.getElementById('arbol-list').innerHTML = '<div style="color:#ef4444;font-size:12px;padding:16px">' + e.message + '</div>';
+    })
+    .getArbolClausulas();
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      controles = JSON.parse(json); ctrlVisible = controles.slice(); renderTablaControles();
+    })
+    .withFailureHandler(function() {})
+    .getControlesA();
+}
+
+// ── ARBOL ──
+function getDotClass(item) { return item.evidencia ? 'dot-con-evidencia' : 'dot-sin-evidencia'; }
+function contarConEvidencia(hijos) { return hijos.filter(function(h) { return !!h.evidencia; }).length + '/' + hijos.length; }
+
+function renderArbol() {
+  var container = document.getElementById('arbol-list');
+  if (!clausulas.length) { container.innerHTML = '<div class="loading-arbol">Sin datos</div>'; return; }
+  var html = '';
+  clausulas.filter(function(c) { return c.nivel === 1; }).forEach(function(p) {
+    var h2 = clausulas.filter(function(c) { return c.nivel === 2 && isHijo(c.id, p.id); });
+    html += nodoHTML(p, 'indent-1', h2.length > 0, h2);
+    if (h2.length) {
+      html += '<div class="nodo-children" id="children-' + esc(p.id) + '">';
+      h2.forEach(function(c2) {
+        var h3 = clausulas.filter(function(c) { return c.nivel === 3 && isHijo(c.id, c2.id); });
+        html += nodoHTML(c2, 'indent-2', h3.length > 0, h3);
+        if (h3.length) {
+          html += '<div class="nodo-children" id="children-' + esc(c2.id) + '">';
+          h3.forEach(function(c3) { html += nodoHTML(c3, 'indent-3', false, []); });
+          html += '</div>';
+        }
+      });
+      html += '</div>';
+    }
+    if (['3','7','10'].indexOf(p.id) >= 0) html += '<hr class="arbol-sep">';
+  });
+  container.innerHTML = html;
+}
+
+function nodoHTML(item, indent, tieneHijos, hijos) {
+  var nivel = item.nivel === 1 ? 'nivel1' : item.nivel === 2 ? 'nivel2' : 'nivel3';
+  var conteo = tieneHijos ? contarConEvidencia(hijos) : '';
+  var html = '<div class="nodo" id="nodo-' + esc(item.id) + '">';
+  html += '<div class="nodo-row ' + indent + '" onclick="seleccionarNodo(this,\'' + esc(item.id) + '\')"' +
+          (tieneHijos ? ' ondblclick="toggleNodo(\'' + esc(item.id) + '\')"' : '') + '>';
+  html += '<span class="nodo-toggle' + (tieneHijos ? '' : ' leaf') + '" id="toggle-' + esc(item.id) + '" onclick="event.stopPropagation();toggleNodo(\'' + esc(item.id) + '\')">&#9658;</span>';
+  html += '<span class="nodo-dot ' + getDotClass(item) + '"></span>';
+  html += '<span class="nodo-label ' + nivel + '"><span class="nodo-id">' + item.id + '</span>' + item.titulo + '</span>';
+  if (conteo) html += '<span class="nodo-counter">' + conteo + '</span>';
+  html += '</div></div>';
+  return html;
+}
+
+function isHijo(childId, parentId) {
+  var cp = childId.split('.'), pp = parentId.split('.');
+  return cp.length === pp.length + 1 && childId.startsWith(parentId + '.');
+}
+function toggleNodo(id) {
+  var ch = document.getElementById('children-' + id);
+  var tg = document.getElementById('toggle-' + id);
+  if (!ch) return;
+  var open = ch.classList.contains('open');
+  ch.classList.toggle('open');
+  if (tg) tg.classList.toggle('open', !open);
+}
+function seleccionarNodo(rowEl, id) {
+  document.querySelectorAll('.nodo-row.selected').forEach(function(el) { el.classList.remove('selected'); });
+  rowEl.classList.add('selected');
+  var item = clausulas.find(function(c) { return c.id === id; });
+  if (item) mostrarDetalleClausula(item);
+}
+
+// ── BUSQUEDA ──
+function buscarArbol() {
+  var q = document.getElementById('arbol-buscar').value.trim().toLowerCase();
+  arbolBusqTerm = q;
+  if (!q) { limpiarBusqueda(); return; }
+  var matchIds = new Set();
+  clausulas.forEach(function(c) {
+    if ((c.id + ' ' + c.titulo + ' ' + c.descripcion).toLowerCase().includes(q)) matchIds.add(c.id);
+  });
+  matchIds.forEach(function(id) { expandirPadres(id); });
+  clausulas.forEach(function(c) {
+    var row = document.querySelector('#nodo-' + CSS.escape(c.id) + ' > .nodo-row');
+    if (!row) return;
+    row.classList.remove('highlight');
+    if (matchIds.has(c.id)) {
+      row.classList.add('highlight');
+      var lbl = row.querySelector('.nodo-label');
+      if (lbl) {
+        var idSpan = lbl.querySelector('.nodo-id');
+        lbl.innerHTML = (idSpan ? idSpan.outerHTML : '') + c.titulo.replace(new RegExp('(' + escRegex(q) + ')', 'gi'), '<mark>$1</mark>');
+      }
+    }
+  });
+}
+function expandirPadres(id) {
+  var parts = id.split('.');
+  for (var i = 1; i < parts.length; i++) {
+    var pid = parts.slice(0, i).join('.');
+    var ch  = document.getElementById('children-' + pid);
+    var tg  = document.getElementById('toggle-' + pid);
+    if (ch && !ch.classList.contains('open')) { ch.classList.add('open'); if (tg) tg.classList.add('open'); }
+  }
+}
+function limpiarBusqueda() {
+  document.getElementById('arbol-buscar').value = '';
+  arbolBusqTerm = '';
+  document.querySelectorAll('.nodo-row.highlight').forEach(function(el) { el.classList.remove('highlight'); });
+  clausulas.forEach(function(c) {
+    var row = document.querySelector('#nodo-' + CSS.escape(c.id) + ' > .nodo-row');
+    if (!row) return;
+    var lbl = row.querySelector('.nodo-label');
+    if (lbl && lbl.querySelector('mark')) {
+      var cls = c.nivel === 1 ? 'nivel1' : c.nivel === 2 ? 'nivel2' : 'nivel3';
+      lbl.className = 'nodo-label ' + cls;
+      lbl.innerHTML = '<span class="nodo-id">' + c.id + '</span>' + c.titulo;
+    }
+  });
+}
+
+// ── DETALLE CLAUSULA ──
+function mostrarDetalleClausula(item) {
+  itemSeleccionado = { tipo: 'clausula', data: item };
+  var hijos = clausulas.filter(function(c) { return c.nivel > item.nivel && isHijo(c.id, item.id); });
+  var html  = '';
+
+  // Cabecera
+  html += '<div class="detalle-card">';
+  html += '<div class="detalle-header">';
+  html += '<div class="detalle-badge">' + item.id + '</div>';
+  html += '<div>';
+  html += '<div class="detalle-titulo">' + item.titulo + '</div>';
+  html += '<span class="detalle-tipo-tag">Clausula ISO 27001:2022</span>';
+  if (SOLO_LECTURA) html += '<span class="lectura-badge">Solo lectura</span>';
+  html += '</div></div>';
+  if (hijos.length) {
+    html += '<div class="detalle-section"><div class="detalle-section-title">Subclausulas</div>';
+    html += '<div>';
+    hijos.forEach(function(h) {
+      html += '<span class="sub-chip" onclick="clickSubclausula(\'' + esc(h.id) + '\')">' + h.id + ' ' + h.titulo + '</span>';
+    });
+    html += '</div></div>';
+  }
+  html += '</div>';
+
+  // Contenido normativo
+  html += seccion('Contenido normativo', '#7c3aed', [
+    campoTA('Descripcion', 'descripcion', item.descripcion, false),
+    campoTA('Requisitos', 'requisitos', item.requisitos, true)
+  ]);
+
+  // Implementacion
+  html += seccion('Implementacion', '#059669', [
+    campoTA('Evidencia', 'evidencia', item.evidencia, false),
+    campoTA('Ejemplos practicos', 'ejemplosPracticos', item.ejemplosPracticos, false)
+  ]);
+
+  // Auditoria
+  html += seccion('Auditoria', '#d97706', [
+    campoTA('Recomendaciones de auditoria', 'recomendacionesAuditoria', item.recomendacionesAuditoria, false),
+    campoTA('Hallazgos', 'hallazgos', item.hallazgos, false),
+    campoTA('Plan de accion correctiva', 'planAccion', item.planAccion, false)
+  ]);
+
+  // Referencias
+  html += seccion('Referencias', '#2563eb', [
+    campoTA('Normas relacionadas', 'normasRelacionadas', item.normasRelacionadas, false),
+    campoTA('Documentos modelo', 'documentosModelo', item.documentosModelo, false)
+  ]);
+
+  document.getElementById('panel-detalle').innerHTML = html;
+}
+
+function seccion(titulo, color, campos) {
+  return '<div class="edit-card">' +
+    '<div class="edit-card-header"><span class="edit-card-dot" style="background:' + color + '"></span><span class="edit-card-title">' + titulo + '</span></div>' +
+    '<div class="edit-card-body">' + campos.join('') + '</div>' +
+    '</div>';
+}
+function campoTA(label, campo, valor, isRequisitos) {
+  var cls    = 'field-textarea' + (isRequisitos ? ' requisitos-ta' : '') + (SOLO_LECTURA ? ' solo-lectura' : '');
+  var extras = SOLO_LECTURA ? ' readonly' : ' onblur="autoGuardar(this)"';
+  return '<div class="form-group"><label>' + label + '</label>' +
+    '<textarea class="' + cls + '" data-campo="' + campo + '"' + extras + '>' + esc(valor) + '</textarea></div>';
+}
+
+function clickSubclausula(id) {
+  var item = clausulas.find(function(c) { return c.id === id; });
+  if (!item) return;
+  expandirPadres(id);
+  document.querySelectorAll('.nodo-row.selected').forEach(function(el) { el.classList.remove('selected'); });
+  var row = document.querySelector('#nodo-' + CSS.escape(id) + ' > .nodo-row');
+  if (row) { row.classList.add('selected'); row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  mostrarDetalleClausula(item);
+}
+
+// ── AUTO-SAVE ──
+function autoGuardar(el) {
+  if (!itemSeleccionado || SOLO_LECTURA) return;
+  var campo = el.getAttribute('data-campo');
+  var fila  = itemSeleccionado.data.fila;
+  var val   = el.value;
+
+  itemSeleccionado.data[campo] = val;
+  var cl = clausulas.find(function(c) { return c.id === itemSeleccionado.data.id; });
+  if (cl) cl[campo] = val;
+
+  if (campo === 'evidencia') {
+    var dot = document.querySelector('#nodo-' + CSS.escape(itemSeleccionado.data.id) + ' > .nodo-row .nodo-dot');
+    if (dot) dot.className = 'nodo-dot ' + (val ? 'dot-con-evidencia' : 'dot-sin-evidencia');
+  }
+
+  el.classList.remove('field-guardado', 'field-error');
+  el.classList.add('field-guardando');
+
+  google.script.run
+    .withSuccessHandler(function(resStr) {
+      el.classList.remove('field-guardando');
+      var res = JSON.parse(resStr);
+      if (res.ok) {
+        el.classList.add('field-guardado');
+        mostrarToast('Guardado', false);
+        setTimeout(function() { el.classList.remove('field-guardado'); }, 2000);
+      } else {
+        el.classList.add('field-error');
+        mostrarToast('Error: ' + res.msg, true);
+        setTimeout(function() { el.classList.remove('field-error'); }, 3000);
+      }
+    })
+    .withFailureHandler(function() {
+      el.classList.remove('field-guardando');
+      el.classList.add('field-error');
+      mostrarToast('Error al guardar', true);
+      setTimeout(function() { el.classList.remove('field-error'); }, 3000);
+    })
+    .actualizarItem('clausulas', fila, campo, val);
+}
+
+// ── CONTROLES ──
+function filtrarControles() {
+  var q   = (document.getElementById('ctrl-buscar').value || '').toLowerCase();
+  var dom =  document.getElementById('ctrl-dominio').value || '';
+  var est =  document.getElementById('ctrl-estado').value  || '';
+  ctrlVisible = controles.filter(function(c) {
+    var txt = (c.id + ' ' + c.nombre + ' ' + c.proposito).toLowerCase();
+    return (!q || txt.includes(q)) && (!dom || c.dominio === dom) && (!est || c.estado === est);
+  });
+  document.getElementById('ctrl-count').textContent = ctrlVisible.length + ' / ' + controles.length + ' controles';
+  renderTablaControles();
+}
+function renderTablaControles() {
+  var tbody = document.getElementById('tbody-controles');
+  document.getElementById('ctrl-count').textContent = ctrlVisible.length + ' / ' + controles.length + ' controles';
+  if (!ctrlVisible.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">Sin resultados</td></tr>';
+    return;
+  }
+  var DC = { '5':{ bg:'#dbeafe',color:'#1d4ed8' }, '6':{ bg:'#fce7f3',color:'#9d174d' }, '7':{ bg:'#d1fae5',color:'#065f46' }, '8':{ bg:'#fef3c7',color:'#92400e' } };
+  var EC = { 'Conforme':{ bg:'#dcfce7',color:'#166534' }, 'En proceso':{ bg:'#fef9c3',color:'#854d0e' }, 'No conforme':{ bg:'#fee2e2',color:'#991b1b' }, 'No aplica':{ bg:'#f1f5f9',color:'#64748b' } };
+  var html = '';
+  ctrlVisible.forEach(function(c) {
+    var dc = DC[c.dominio] || { bg:'#f1f5f9', color:'#64748b' };
+    var ec = EC[c.estado]  || { bg:'transparent', color:'#94a3b8' };
+    html += '<tr style="border-bottom:1px solid #f8fafc" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'\'">';
+    html += '<td style="padding:11px 14px;font-weight:600;color:#0f2744;font-family:monospace;font-size:13px;white-space:nowrap">' + c.id + '</td>';
+    html += '<td style="padding:11px 14px;white-space:nowrap"><span style="display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:' + dc.bg + ';color:' + dc.color + '">' + c.nombreDominio + '</span></td>';
+    html += '<td style="padding:11px 14px;max-width:280px"><div style="font-weight:500;font-size:13px;color:#1e293b">' + c.nombre + '</div><div style="font-size:11.5px;color:#64748b;margin-top:3px;line-height:1.5">' + c.proposito + '</div></td>';
+    html += '<td style="padding:11px 14px;white-space:nowrap">';
+    if (SOLO_LECTURA) {
+      html += '<span style="display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600;background:' + ec.bg + ';color:' + ec.color + '">' + (c.estado || '—') + '</span>';
+    } else {
+      html += '<select style="border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600;cursor:pointer;outline:none;background:' + ec.bg + ';color:' + ec.color + ';font-family:inherit" onchange="cambiarEstadoControl(this,' + c.fila + ')" data-id="' + c.id + '">';
+      ['','Conforme','En proceso','No conforme','No aplica'].forEach(function(e) {
+        html += '<option value="' + e + '"' + (c.estado === e ? ' selected':'') + '>' + (e || '— Sin estado —') + '</option>';
+      });
+      html += '</select>';
+    }
+    html += '</td>';
+    html += '<td style="padding:11px 14px"><input type="text" style="border:none;background:transparent;font-size:13px;color:#1e293b;font-family:inherit;width:100%;outline:none' + (SOLO_LECTURA ? ';cursor:default' : '') + '"' + (SOLO_LECTURA ? ' readonly' : ' onblur="cambiarCampoControl(this,' + c.fila + ',\'responsable\')"') + ' value="' + esc(c.responsable) + '" placeholder="—"></td>';
+    html += '<td style="padding:11px 14px"><input type="text" style="border:none;background:transparent;font-size:13px;color:#1e293b;font-family:inherit;width:120px;outline:none' + (SOLO_LECTURA ? ';cursor:default' : '') + '"' + (SOLO_LECTURA ? ' readonly' : ' onblur="cambiarCampoControl(this,' + c.fila + ',\'obs\')"') + ' value="' + esc(c.obs) + '" placeholder="—"></td>';
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+function cambiarEstadoControl(sel, fila) {
+  var val = sel.value;
+  var ec  = { 'Conforme':{ bg:'#dcfce7',color:'#166534' },'En proceso':{ bg:'#fef9c3',color:'#854d0e' },'No conforme':{ bg:'#fee2e2',color:'#991b1b' },'No aplica':{ bg:'#f1f5f9',color:'#64748b' } }[val] || { bg:'transparent',color:'#94a3b8' };
+  sel.style.background = ec.bg; sel.style.color = ec.color;
+  var ctrl = controles.find(function(c) { return c.id === sel.getAttribute('data-id'); });
+  if (ctrl) ctrl.estado = val;
+  google.script.run.withFailureHandler(function(e) { mostrarToast('Error: ' + e.message, true); }).actualizarItem('controles', fila, 'estado', val);
+}
+function cambiarCampoControl(input, fila, campo) {
+  google.script.run.withFailureHandler(function(e) { mostrarToast('Error: ' + e.message, true); }).actualizarItem('controles', fila, campo, input.value);
+}
+
+// ── USUARIOS ──
+function cargarUsuarios() {
+  if (!usuarioActual || usuarioActual.permiso !== 'Admin') return;
+  document.getElementById('loading-usuarios').style.display = 'flex';
+  document.getElementById('tabla-usuarios').style.display   = 'none';
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var res = JSON.parse(json);
+      if (res.ok) renderUsuarios(res.usuarios);
+      else document.getElementById('loading-usuarios').textContent = 'Error: ' + res.msg;
+    })
+    .withFailureHandler(function(e) { document.getElementById('loading-usuarios').textContent = 'Error: ' + e.message; })
+    .getUsuarios();
+}
+function renderUsuarios(lista) {
+  document.getElementById('loading-usuarios').style.display = 'none';
+  document.getElementById('tabla-usuarios').style.display   = 'table';
+  if (!lista.length) {
+    document.getElementById('tbody-usuarios').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;font-size:13px">Sin usuarios. Agrega uno arriba.</td></tr>';
+    return;
+  }
+  var html = '';
+  lista.forEach(function(u) {
+    var pBg = u.permiso === 'Edicion' ? '#dbeafe' : '#f1f5f9';
+    var pC  = u.permiso === 'Edicion' ? '#1d4ed8' : '#64748b';
+    var sBg = u.estado === 'Activo' ? '#dcfce7' : '#fef2f2';
+    var sC  = u.estado === 'Activo' ? '#166534' : '#991b1b';
+    html += '<tr style="border-bottom:1px solid #f8fafc" onmouseenter="this.style.background=\'#f8fafc\'" onmouseleave="this.style.background=\'\'">';
+    html += '<td style="padding:11px 14px;font-size:13px;color:#0f2744;font-weight:500">' + esc(u.email) + '</td>';
+    html += '<td style="padding:11px 14px;font-size:13px">' + esc(u.nombre) + '</td>';
+    html += '<td style="padding:11px 14px"><select onchange="actualizarUsuarioFront(this,\'' + esc(u.email) + '\',\'permiso\')" style="border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600;cursor:pointer;outline:none;background:' + pBg + ';color:' + pC + ';font-family:inherit"><option value="Lectura"' + (u.permiso==='Lectura'?' selected':'') + '>Lectura</option><option value="Edicion"' + (u.permiso==='Edicion'?' selected':'') + '>Edicion</option></select></td>';
+    html += '<td style="padding:11px 14px"><select onchange="actualizarUsuarioFront(this,\'' + esc(u.email) + '\',\'estado\')" style="border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600;cursor:pointer;outline:none;background:' + sBg + ';color:' + sC + ';font-family:inherit"><option value="Activo"' + (u.estado==='Activo'?' selected':'') + '>Activo</option><option value="Inactivo"' + (u.estado==='Inactivo'?' selected':'') + '>Inactivo</option></select></td>';
+    html += '<td style="padding:11px 14px;font-size:12px;color:#94a3b8">' + esc(u.fechaAgregado || '—') + '</td>';
+    html += '<td style="padding:11px 14px;white-space:nowrap">';
+    html += '<button onclick="reenviarEmailFront(\'' + esc(u.email) + '\',this)" style="background:#f1f5f9;border:none;border-radius:6px;padding:5px 11px;font-size:12px;color:#475569;cursor:pointer;margin-right:6px;font-family:inherit;font-weight:500">Reenviar email</button>';
+    html += '<button onclick="eliminarUsuarioFront(\'' + esc(u.email) + '\',this)" style="background:#fef2f2;border:none;border-radius:6px;padding:5px 11px;font-size:12px;color:#991b1b;cursor:pointer;font-family:inherit;font-weight:500">Eliminar</button>';
+    html += '</td></tr>';
+  });
+  document.getElementById('tbody-usuarios').innerHTML = html;
+}
+function agregarUsuarioFront() {
+  var email   = document.getElementById('nu-email').value.trim();
+  var nombre  = document.getElementById('nu-nombre').value.trim();
+  var permiso = document.getElementById('nu-permiso').value;
+  if (!email || !nombre) { mostrarMsgNu('Completa email y nombre', false); return; }
+  var btn = document.getElementById('btn-agregar');
+  btn.disabled = true; btn.textContent = 'Agregando...';
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false; btn.textContent = '+ Agregar';
+      var res = JSON.parse(json);
+      if (res.ok) {
+        document.getElementById('nu-email').value = '';
+        document.getElementById('nu-nombre').value = '';
+        mostrarMsgNu('Usuario agregado.' + (res.msg ? ' ' + res.msg : ''), true);
+        cargarUsuarios();
+      } else { mostrarMsgNu(res.msg, false); }
+    })
+    .withFailureHandler(function(e) { btn.disabled = false; btn.textContent = '+ Agregar'; mostrarMsgNu('Error: ' + e.message, false); })
+    .agregarUsuario(email, nombre, permiso);
+}
+function actualizarUsuarioFront(sel, email, campo) {
+  var val = sel.value;
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var res = JSON.parse(json);
+      mostrarToast(res.ok ? 'Actualizado' : 'Error: ' + res.msg, !res.ok);
+      if (res.ok) {
+        if (campo === 'permiso') { sel.style.background = val==='Edicion'?'#dbeafe':'#f1f5f9'; sel.style.color = val==='Edicion'?'#1d4ed8':'#64748b'; }
+        if (campo === 'estado')  { sel.style.background = val==='Activo'?'#dcfce7':'#fef2f2'; sel.style.color = val==='Activo'?'#166534':'#991b1b'; }
+      }
+    })
+    .withFailureHandler(function(e) { mostrarToast('Error: ' + e.message, true); })
+    .actualizarUsuario(email, campo, val);
+}
+function reenviarEmailFront(email, btn) {
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false; btn.textContent = 'Reenviar email';
+      var res = JSON.parse(json);
+      mostrarToast(res.ok ? 'Email enviado' : 'Error: ' + res.msg, !res.ok);
+    })
+    .withFailureHandler(function(e) { btn.disabled = false; btn.textContent = 'Reenviar email'; mostrarToast('Error: ' + e.message, true); })
+    .reenviarInvitacion(email);
+}
+function eliminarUsuarioFront(email, btn) {
+  if (!confirm('Eliminar usuario ' + email + '?\nEsta accion no se puede deshacer.')) return;
+  btn.disabled = true; btn.textContent = 'Eliminando...';
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var res = JSON.parse(json);
+      if (res.ok) { btn.closest('tr').remove(); mostrarToast('Usuario eliminado', false); }
+      else { btn.disabled = false; btn.textContent = 'Eliminar'; mostrarToast('Error: ' + res.msg, true); }
+    })
+    .withFailureHandler(function(e) { btn.disabled = false; btn.textContent = 'Eliminar'; mostrarToast('Error: ' + e.message, true); })
+    .eliminarUsuario(email);
+}
+function mostrarMsgNu(txt, ok) {
+  var el = document.getElementById('msg-nu');
+  el.textContent = txt;
+  el.className = 'msg-form ' + (ok ? 'ok' : 'error');
+  setTimeout(function() { el.className = 'msg-form'; }, 4000);
+}
+
+// ── DASHBOARD ──
+function cargarDashboard() {
+  google.script.run
+    .withSuccessHandler(function(json) { renderDashboard(JSON.parse(json)); })
+    .withFailureHandler(function(e) {
+      document.getElementById('prog-dominios').innerHTML = '<div style="color:#ef4444;font-size:13px">Error: ' + e.message + '</div>';
+    })
+    .getDashboard27001();
+}
+function renderDashboard(d) {
+  var cs = d.clausulas;
+  setText('dk-clau-total', cs.total); setText('dk-clau-evid', cs.conEvidencia);
+  setText('dk-clau-hall',  cs.conHallazgos); setText('dk-clau-plan', cs.conPlan); setText('dk-clau-rec', cs.conRecomendaciones);
+  setText('dk-clau-evid-pct', (cs.total > 0 ? Math.round(cs.conEvidencia * 100 / cs.total) : 0) + '%');
+  var ct = d.controles;
+  setText('dk-ctrl-total', ct.total); setText('dk-ctrl-conf', ct.conforme);
+  setText('dk-ctrl-proc', ct.enProceso); setText('dk-ctrl-noc', ct.noConforme);
+  setText('dk-ctrl-na', ct.noAplica); setText('dk-ctrl-pct', ct.pct + '%');
+  var domHtml = '';
+  ['Controles Organizacionales','Controles de Personas','Controles Fisicos','Controles Tecnologicos'].forEach(function(dn) {
+    var c = d.porDominio[dn]; if (!c) return;
+    domHtml += progBar(dn, c.conforme, c.enProceso, c.noConforme, c.noAplica, c.total);
+  });
+  if (!domHtml) Object.keys(d.porDominio).forEach(function(dn) { var c = d.porDominio[dn]; domHtml += progBar(dn, c.conforme, c.enProceso, c.noConforme, c.noAplica, c.total); });
+  document.getElementById('prog-dominios').innerHTML = domHtml || '<div style="color:#94a3b8">Sin datos</div>';
+}
+function progBar(label, conf, proc, noc, na, total) {
+  var activos = total - na;
+  var pct     = activos > 0 ? Math.round(conf * 100 / activos) : 0;
+  var toW     = function(n) { return total > 0 ? (n / total * 100).toFixed(1) : 0; };
+  return '<div class="prog-row"><div class="prog-label"><span>' + label + '</span><span style="font-weight:600;color:#0f2744">' + conf + '/' + activos + ' <span style="font-weight:400;color:#94a3b8">(' + pct + '%)</span></span></div>' +
+    '<div class="prog-bar"><div class="prog-seg seg-conf" style="width:' + toW(conf) + '%"></div><div class="prog-seg seg-proc" style="width:' + toW(proc) + '%"></div><div class="prog-seg seg-noc" style="width:' + toW(noc) + '%"></div><div class="prog-seg seg-na" style="width:' + toW(na) + '%"></div></div></div>';
+}
+
+// ── UTILS ──
+function mostrarToast(msg, isError) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'error show' : 'show';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function() { t.className = ''; }, 2200);
+}
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function escRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+</script>
+</body>
+</html>
